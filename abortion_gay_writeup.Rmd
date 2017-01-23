@@ -1,0 +1,267 @@
+---
+layout: post
+title: "Gay Marriage and Abortion"
+date: 2017-01-21
+output:
+  html_document:
+    css: style.css
+share: true
+categories: blog
+excerpt: "Longitudinal Analysis of Gay Marriage and Abortion"
+tags: [rstats]
+---
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(haven)
+library(car)
+library(reshape2)
+library(plotly)
+library(extrafont)
+library(extrafontdb)
+library(RColorBrewer)
+
+Sys.setenv("plotly_username"="ryanburge")
+Sys.setenv("plotly_api_key"="bvzv16do7x")
+
+gss <- read_dta("D:/reltrad.dta")
+```
+
+## Abortion Support Over Time
+
+I don't think I've ever seen anyone do abortion support over time using reltrad. This is all GSS data. The only small hiccup is that they didn't ask abortion questions in 1986. I just smoothed that over in the visuals. 
+
+All the plots are interactive. Mouse over to see that actual value for each year and each tradition. 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+df <- select(gss, year, age, reltrad, abdefect, abnomore, abhlth, abpoor, abrape, absingle, abany)
+df$abdefect <- as_factor(df$abdefect)
+df$abdefect <- as.numeric(df$abdefect)
+df$abnomore <- as_factor(df$abnomore)
+df$abnomore <- as.numeric(df$abnomore)
+df$abhlth <- as_factor(df$abhlth)
+df$abhlth <- as.numeric(df$abhlth)
+df$absingle <- as_factor(df$absingle)
+df$absingle <- as.numeric(df$absingle)
+df$abany <- as_factor(df$abany)
+df$abany <- as.numeric(df$abany)
+df$abrape <- as_factor(df$abrape)
+df$abrape <- as.numeric(df$abrape)
+
+df$abdefect[df$abdefect >=3] <- NA
+df$abnomore[df$abnomore >=3] <- NA
+df$abhlth[df$abhlth >=3] <- NA
+df$absingle[df$absingle >=3] <- NA
+df$abany[df$abany >=3] <- NA
+df$abrape[df$abrape >=3] <- NA
+
+df$abdefect <- recode(df$abdefect, "1=1; 2=0")
+df$abnomore <- recode(df$abnomore, "1=1; 2=0")
+df$abhlth <- recode(df$abhlth, "1=1; 2=0")
+df$abpoor <- recode(df$abpoor, "1=1; 2=0")
+df$absingle <- recode(df$absingle, "1=1; 2=0")
+df$abany <- recode(df$abany, "1=1; 2=0")
+df$abrape <- recode(df$abrape, "1=1; 2=0")
+
+
+abort <- df %>% group_by(year, reltrad) %>% summarise(defect = mean(abdefect, na.rm =TRUE), nomore = mean(abnomore, na.rm =TRUE), health = mean(abhlth, na.rm =TRUE), poor = mean(abpoor, na.rm =TRUE), rape = mean(abrape, na.rm =TRUE), single = mean(absingle, na.rm =TRUE), any= mean(abany, na.rm =TRUE))
+a2 <- melt(abort, id.vars=c("year", "reltrad"))
+
+a2$reltrad[a2$reltrad ==1] <- "Evangelical"
+a2$reltrad[a2$reltrad ==2] <- "Mainline"
+a2$reltrad[a2$reltrad ==3] <- "Black Protestant"
+a2$reltrad[a2$reltrad ==4] <- "Catholic"
+a2$reltrad[a2$reltrad ==5] <- "Jewish"
+a2$reltrad[a2$reltrad ==6] <- "Other"
+a2$reltrad[a2$reltrad ==7] <- "No Religion"
+a2$reltrad <- as_factor(a2$reltrad)
+
+
+Nth.delete<-function(dataframe, n)dataframe[-(seq(n,to=nrow(dataframe),by=n)),]
+a2 <- Nth.delete(a2, 8)
+a2 <- filter(a2, year != 1986)
+
+
+p1 <- ggplot(a2 %>% filter(variable == "nomore"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("If she is married and does not want any more children?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p2 <-ggplot(a2 %>% filter(variable == "defect"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("If there is a strong chance of serious defect in the baby?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p3 <- ggplot(a2 %>% filter(variable == "health"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("If the woman''s own health is seriously endangered by the pregnancy?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p4 <- ggplot(a2 %>% filter(variable == "poor"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("If the family has a very low income and cannot afford any more children?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p5 <- ggplot(a2 %>% filter(variable == "rape"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("If she became pregnant as a result of rape?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans")) + ylim(0,100)+  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p6 <- ggplot(a2 %>% filter(variable == "single"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("If she is not married and does not want to marry the man?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p7 <- ggplot(a2 %>% filter(variable == "any"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
+  ggtitle("The woman wants it for any reason?") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100) +  
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, fig.width=12}
+ggplotly(p1)
+ggplotly(p2)
+ggplotly(p3)
+ggplotly(p4)
+ggplotly(p5)
+ggplotly(p6)
+ggplotly(p7)
+```
+
+## Has Pro-Life Support Waned Among Younger Evangelicals
+
+This data is just from 2010-2014. I wanted to get a more contemporary view of evangelicalism. The data is broken down into three basic generations. As you can see, younger evangelicals are as pro-life as middle aged ones. In some ways younger evangelicals are actually more conservative on abortion than middle agers. 
+
+The Catholic trend is fascinating, though. Old Catholics are as conservative as old evangelicals. Less so in the younger age categories. 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, fig.width=12}
+df <- filter(df, year >=2010) 
+
+
+#df$age <- as_factor(df$age)
+#df$age <- as.numeric(df$age)
+
+df <- na.omit(df)
+
+#cut(df$age, breaks =3)
+df$gen <- recode(df$age, "17.9:41 =1; 42:65=2; 65:90=3")
+
+a1 <- df %>% group_by(gen, reltrad) %>% summarise(defect = mean(abdefect, na.rm =TRUE), nomore = mean(abnomore, na.rm =TRUE), health = mean(abhlth, na.rm =TRUE), poor = mean(abpoor, na.rm =TRUE), rape = mean(abrape, na.rm =TRUE), single = mean(absingle, na.rm =TRUE), any= mean(abany, na.rm =TRUE))
+
+a1$reltrad[a1$reltrad ==1] <- "Evangelical"
+a1$reltrad[a1$reltrad ==2] <- "Mainline"
+a1$reltrad[a1$reltrad ==3] <- "Black Protestant"
+a1$reltrad[a1$reltrad ==4] <- "Catholic"
+a1$reltrad[a1$reltrad ==5] <- "Jewish"
+a1$reltrad[a1$reltrad ==6] <- "Other"
+a1$reltrad[a1$reltrad ==7] <- "No Religion"
+a1$reltrad <- as_factor(a1$reltrad)
+
+ab1 <- melt(a1, id.vars=c("gen", "reltrad"))
+
+ab1$gen[ab1$gen ==1] <- "18-41 years old"
+ab1$gen[ab1$gen ==2] <- "42-65 years old"
+ab1$gen[ab1$gen ==3] <- "Over 65 years old"
+
+ab1$variable <- factor(ab1$variable, labels = c("Birth Defect", "No More Kids", "Mother's Health", "Poverty", "Rape", "Unmarried", "Any Reason"))
+
+
+
+p8 <- ggplot(ab1 %>% filter(gen == "18-41 years old"), aes(x = value*100, y = variable))  +
+  geom_point(shape=21, size =4, aes(fill = factor(reltrad))) +  theme(legend.title=element_blank()) +
+  theme(legend.position = "bottom")  + scale_fill_brewer(palette = "Set2") + 
+  ylab("Abortion Situation") + xlab("Percent in Favor of Abortion") +
+  ggtitle("                                             18-41 years old")+ 
+  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)
+
+p9 <- ggplot(ab1 %>% filter(gen == "42-65 years old"), aes(x = value*100, y = variable))  +
+  geom_point(shape=21, size =4, aes(fill = factor(reltrad))) +  theme(legend.title=element_blank()) +
+  theme(legend.position = "bottom")  + scale_fill_brewer(palette = "Set2") + 
+  ylab("Abortion Situation") + xlab("Percent in Favor of Abortion") +
+  ggtitle("                                             42-65 years old")+ 
+  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)
+
+
+p10 <- ggplot(ab1 %>% filter(gen == "Over 65 years old"), aes(x = value*100, y = variable))  +
+  geom_point(shape=21, size =4, aes(fill = factor(reltrad))) +  theme(legend.title=element_blank()) +
+  theme(legend.position = "bottom")  + scale_fill_brewer(palette = "Set2") + 
+  ylab("Abortion Situation") + xlab("Percent in Favor of Abortion") +
+  ggtitle("                                         Over 65 years old")+ 
+  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)
+
+ggplotly(p8)
+ggplotly(p9)
+ggplotly(p10)
+
+```
+
+## Support for Gay Marriage Over Time
+
+I wanted to compare abortion support and gay marriage support. Unfortunately the GSS didn't ask these questions as frequently as the abortion ones.
+
+Notice that the gay marriage question only goes back to 2006 here. But you can see the upward trend easily. 
+
+The second graph has gaps in years where the question wasn't asked. Again, the upward trend. 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE, fig.width=12}
+df <- select(gss, year, reltrad, marhomo, homosex)
+df$marhomo <- as_factor(df$marhomo)
+df$marhomo <- as.numeric(df$marhomo)
+df$homosex <- as_factor(df$homosex)
+df$homosex <- as.numeric(df$homosex)
+
+
+df$marhomo[df$marhomo >=6] <- NA
+df$homosex[df$homosex >=6] <- NA
+
+df$marhomo <- recode(df$marhomo, "1=1; 2=1; 3=0; 4=0; 5=0")
+df$homosex <- recode(df$homosex, "4=1; 1=0; 2=0; 3=0; 5=0")
+
+
+
+gay <- df %>% group_by(year, reltrad) %>% summarise(marriage = mean(marhomo, na.rm =TRUE), gaysex = mean(homosex, na.rm =TRUE))
+a2 <- melt(gay, id.vars=c("year", "reltrad"))
+
+a2$reltrad[a2$reltrad ==1] <- "Evangelical"
+a2$reltrad[a2$reltrad ==2] <- "Mainline"
+a2$reltrad[a2$reltrad ==3] <- "Black Protestant"
+a2$reltrad[a2$reltrad ==4] <- "Catholic"
+a2$reltrad[a2$reltrad ==5] <- "Jewish"
+a2$reltrad[a2$reltrad ==6] <- "Other"
+a2$reltrad[a2$reltrad ==7] <- "No Religion"
+a2$reltrad <- as_factor(a2$reltrad)
+
+a2 <- Nth.delete(a2, 8)
+
+p11 <- ggplot(a2 %>% filter(variable == "marriage"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent Who Strongly Agree or Agree") + 
+  ggtitle("Homosexual couples should have the right to marry one another.") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  xlim(2006, 2014) +
+  scale_colour_brewer("Religious Tradition", palette="Set2") 
+
+p12 <- ggplot(a2 %>% filter(variable == "gaysex"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
+  geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Not Wrong At All (Percent)") + 
+  ggtitle("What about sexual relations between two adults of the same sex") + labs(colour = "Religious Tradition") +
+  theme(legend.position="bottom")  + 
+  theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100) + 
+  scale_colour_brewer("Religious Tradition", palette="Set2")
+
+ggplotly(p11)
+ggplotly(p12)
+
+```
