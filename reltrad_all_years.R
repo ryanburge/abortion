@@ -1,7 +1,7 @@
 library(tidyverse)
 library(haven)
 library(car)
-
+library(reshape2)
 gss <- read_dta("D:/reltrad.dta")
 
 
@@ -39,8 +39,8 @@ df$abrape <- recode(df$abrape, "1=1; 2=0")
 abort <- df %>% group_by(year, reltrad) %>% summarise(defect = mean(abdefect, na.rm =TRUE), nomore = mean(abnomore, na.rm =TRUE), health = mean(abhlth, na.rm =TRUE), poor = mean(abpoor, na.rm =TRUE), rape = mean(abrape, na.rm =TRUE), single = mean(absingle, na.rm =TRUE), any= mean(abany, na.rm =TRUE))
 a2 <- melt(abort, id.vars=c("year", "reltrad"))
 
-abort <- df %>% group_by(year, sex) %>% summarise(defect = mean(abdefect, na.rm =TRUE), nomore = mean(abnomore, na.rm =TRUE), health = mean(abhlth, na.rm =TRUE), poor = mean(abpoor, na.rm =TRUE), rape = mean(abrape, na.rm =TRUE), single = mean(absingle, na.rm =TRUE), any= mean(abany, na.rm =TRUE))
-a2 <- melt(abort, id.vars=c("year", "sex"))
+#abort <- df %>% group_by(year, sex) %>% summarise(defect = mean(abdefect, na.rm =TRUE), nomore = mean(abnomore, na.rm =TRUE), health = mean(abhlth, na.rm =TRUE), poor = mean(abpoor, na.rm =TRUE), rape = mean(abrape, na.rm =TRUE), single = mean(absingle, na.rm =TRUE), any= mean(abany, na.rm =TRUE))
+#a2 <- melt(abort, id.vars=c("year", "sex"))
 
 a2$reltrad[a2$reltrad ==1] <- "Evangelical"
 a2$reltrad[a2$reltrad ==2] <- "Mainline"
@@ -60,14 +60,16 @@ ggplot(a2 %>% filter(variable == "nomore"), aes(x=year, y=value*100, label = rel
   ggtitle("If she is married and does not want any more children?") + labs(colour = "Religious Tradition") +
   theme(legend.position="bottom")  + 
   theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
-  scale_colour_brewer("Religious Tradition", palette="Set2") 
+  scale_colour_brewer("Religious Tradition", palette="Set2")  + 
+  annotate("text", x = 1145, y = .5, label = "religioninpublic.blog", size = 5)
 
 ggplot(a2 %>% filter(variable == "defect"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
   geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
   ggtitle("If there is a strong chance of serious defect in the baby?") + labs(colour = "Religious Tradition") +
   theme(legend.position="bottom")  + 
   theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100)+  
-  scale_colour_brewer("Religious Tradition", palette="Set2") 
+  scale_colour_brewer("Religious Tradition", palette="Set2") + 
+  annotate("text", x = 2010, y = .5, label = "religioninpublic.blog", size = 5)
 
 ggplot(a2 %>% filter(variable == "health"), aes(x=year, y=value*100, label = reltrad, color =reltrad)) + 
   geom_line(aes(group = reltrad), size=1.5 ) + xlab("Year") + ylab("Percent in Favor of Abortion") + 
@@ -102,7 +104,8 @@ ggplot(a2 %>% filter(variable == "any"), aes(x=year, y=value*100, label = reltra
   ggtitle("The woman wants it for any reason?") + labs(colour = "Religious Tradition") +
   theme(legend.position="bottom")  + 
   theme(text=element_text(size=16, family="KerkisSans"))+ ylim(0,100) +  
-  scale_colour_brewer("Religious Tradition", palette="Set2") 
+  scale_colour_brewer("Religious Tradition", palette="Set2") + 
+  annotate("text", x = 2010, y = .5, label = "religioninpublic.blog", size = 5)
 
 
 
