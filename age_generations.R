@@ -64,25 +64,29 @@ ab1$variable <- factor(ab1$variable, labels = c("Birth Defect", "No More Kids", 
 
 
 
-ggplot(ab1 %>% filter(gen == "18-41 years old"), aes(x = value*100, y = variable))  +
+p1 <- ggplot(ab1 %>% filter(gen == "18-41 years old"), aes(x = value*100, y = variable))  +
   geom_point(shape=21, size =4, aes(fill = factor(reltrad))) +  theme(legend.title=element_blank()) +
   theme(legend.position = "bottom")  + scale_fill_brewer(palette = "Set2") + 
   ylab("Abortion Situation") + xlab("Percent in Favor of Abortion") +
-  ggtitle("                                             18-41 years old")+ 
-  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)
+  ggtitle("18-41 years old")+ 
+  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)  + guides(fill=FALSE)
 
-ggplot(ab1 %>% filter(gen == "42-65 years old"), aes(x = value*100, y = variable))  +
+p2 <- ggplot(ab1 %>% filter(gen == "42-65 years old"), aes(x = value*100, y = variable))  +
   geom_point(shape=21, size =4, aes(fill = factor(reltrad))) +  theme(legend.title=element_blank()) +
   theme(legend.position = "bottom")  + scale_fill_brewer(palette = "Set2") + 
   ylab("Abortion Situation") + xlab("Percent in Favor of Abortion") +
-  ggtitle("                                             42-65 years old")+ 
-  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)
+  ggtitle("42-65 years old")+ 
+  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100) + guides(fill=FALSE)
 
 
-ggplot(ab1 %>% filter(gen == "Over 65 years old"), aes(x = value*100, y = variable))  +
+p3 <- ggplot(ab1 %>% filter(gen == "Over 65 years old"), aes(x = value*100, y = variable))  +
   geom_point(shape=21, size =4, aes(fill = factor(reltrad))) +  theme(legend.title=element_blank()) +
   theme(legend.position = "bottom")  + scale_fill_brewer(palette = "Set2") + 
   ylab("Abortion Situation") + xlab("Percent in Favor of Abortion") +
-  ggtitle("                                         Over 65 years old")+ 
-  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100)
+  ggtitle("Over 65 years old")+ 
+  theme(text=element_text(size=16, family="KerkisSans")) + xlim(0,100) + 
+  annotate("text", x = 8, y = 1.25, label = "religioninpublic.blog", size = 4)
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(p1), ggplotGrob(p2), ggplotGrob(p3), size = "last"))
 
